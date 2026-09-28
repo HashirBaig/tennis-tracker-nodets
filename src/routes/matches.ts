@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
-import { Match, IMatch } from "../models/Match";
+import { Match } from "../models/Match";
 import { Player } from "../models/Player";
 
 const router = Router();
