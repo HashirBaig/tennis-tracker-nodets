@@ -100,17 +100,39 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 // GET ("/")
-// @desc Get match list
-router.get("/", async (_req: Request, res: Response) => {
+// @desc Get paginated match list
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const matches = await Match.find()
-      .sort({ createdDate: -1 })
-      .populate("playerOne")
-      .populate("playerTwo");
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string, 10) || 2);
+    const skip = (page - 1) * limit;
 
-    return res
-      .status(200)
-      .json({ message: "successful", data: matches.map((m) => m.toJSON()) });
+    const [matches, totalCount] = await Promise.all([
+      Match.find()
+        .sort({ createdDate: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("playerOne")
+        .populate("playerTwo"),
+      Match.countDocuments(),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return res.status(200).json({
+      message: "successful",
+      data: matches.map((m) => m.toJSON()),
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    });
   } catch (error) {
     console.error("getMatches error:", error);
     return res.status(500).json({ message: "Failed to fetch matches." });
