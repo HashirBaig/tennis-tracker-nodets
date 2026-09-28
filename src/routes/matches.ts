@@ -119,7 +119,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     const totalPages = Math.ceil(totalCount / limit) || 1;
     const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
+    const hasPrevPage = page > 1;
 
     return res.status(200).json({
       message: "successful",
@@ -130,7 +130,7 @@ router.get("/", async (req: Request, res: Response) => {
         totalCount,
         totalPages,
         hasNextPage,
-        hasPreviousPage,
+        hasPrevPage,
       },
     });
   } catch (error) {
