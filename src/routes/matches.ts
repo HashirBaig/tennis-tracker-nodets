@@ -1,8 +1,7 @@
 import { Router, Request, Response } from "express";
 import { Match } from "../models/Match";
 import { Player } from "../models/Player";
-import { getWinLossSummary } from "../utils/common";
-import { POPULATED_MATCH } from "../utils/const";
+import { PLAYER_TALLY } from "../utils/common";
 
 const router = Router();
 
@@ -147,13 +146,46 @@ router.get("/stats", async (req: Request, res: Response) => {
     const matches = await Match.find()
       .populate("playerOne")
       .populate("playerTwo")
-      .lean<POPULATED_MATCH[]>();
+      .lean();
 
-    const data = getWinLossSummary(matches);
+    const totalMatchesPlayed = matches.length;
+
+    const winners: string[] = matches.map(
+      ({ gamesWonByPlayerOne, gamesWonByPlayerTwo, playerOne, playerTwo }) => {
+        return gamesWonByPlayerOne > gamesWonByPlayerTwo
+          ? playerOne?.playerName
+          : playerTwo?.playerName;
+      },
+    );
+
+    const winCountPerPlayerMap: Record<string, number> = {};
+
+    winners.forEach((playerName) => {
+      winCountPerPlayerMap[playerName] =
+        (winCountPerPlayerMap[playerName] ?? 0) + 1;
+    });
+
+    const perPlayerStats: PLAYER_TALLY[] = Object.entries(
+      winCountPerPlayerMap,
+    ).map(([playerName, wins]) => ({
+      playerName,
+      wins,
+    }));
+
+    // Most / least wins
+    const mostWins =
+      [...perPlayerStats].sort((a, b) => b.wins - a.wins)[0] ?? null;
+    const leastWins =
+      [...perPlayerStats].sort((a, b) => a.wins - b.wins)[0] ?? null;
 
     return res.status(200).json({
       message: "successful",
-      data,
+      data: {
+        totalMatchesPlayed,
+        perPlayerStats,
+        mostWins,
+        leastWins,
+      },
     });
   } catch (error) {
     console.error("getMatches error:", error);
