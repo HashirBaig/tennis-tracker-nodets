@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { Match } from "../models/Match";
 import { Player } from "../models/Player";
+import { getWinLossSummary } from "../utils/common";
+import { POPULATED_MATCH } from "../utils/const";
 
 const router = Router();
 
@@ -131,6 +133,27 @@ router.get("/", async (req: Request, res: Response) => {
         hasNextPage,
         hasPrevPage,
       },
+    });
+  } catch (error) {
+    console.error("getMatches error:", error);
+    return res.status(500).json({ message: "Failed to fetch matches." });
+  }
+});
+
+// GET ("/stats")
+// @desc Get match stats
+router.get("/stats", async (req: Request, res: Response) => {
+  try {
+    const matches = await Match.find()
+      .populate("playerOne")
+      .populate("playerTwo")
+      .lean<POPULATED_MATCH[]>();
+
+    const data = getWinLossSummary(matches);
+
+    return res.status(200).json({
+      message: "successful",
+      data,
     });
   } catch (error) {
     console.error("getMatches error:", error);
