@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { Match } from "../models/Match";
 import { Player } from "../models/Player";
-import { PLAYER_TALLY } from "../utils/common";
+import { PLAYER_TALLY, POPULATED_MATCH } from "../utils/common";
 
 const router = Router();
 
@@ -146,7 +146,7 @@ router.get("/stats", async (req: Request, res: Response) => {
     const matches = await Match.find()
       .populate("playerOne")
       .populate("playerTwo")
-      .lean();
+      .lean<POPULATED_MATCH[]>();
 
     const totalMatchesPlayed = matches.length;
 
