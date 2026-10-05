@@ -165,12 +165,12 @@ router.get("/stats", async (req: Request, res: Response) => {
         (winCountPerPlayerMap[playerName] ?? 0) + 1;
     });
 
-    const perPlayerStats: PLAYER_TALLY[] = Object.entries(
-      winCountPerPlayerMap,
-    ).map(([playerName, wins]) => ({
-      playerName,
-      wins,
-    }));
+    const perPlayerStats: PLAYER_TALLY[] = Object.entries(winCountPerPlayerMap)
+      .map(([playerName, wins]) => ({
+        playerName,
+        wins,
+      }))
+      .sort((a, b) => b.wins - a.wins);
 
     // Most / least wins
     const mostWins =
